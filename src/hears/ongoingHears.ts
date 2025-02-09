@@ -51,40 +51,36 @@ async function ongoing(ctx: MyContext) {
     include: [{ model: AnimeDetail }],
   })) as IAnimeDatabase | null;
 
-  if (!anime)
-    return ctx.answerCbQuery("Maaf pada hari tersebut jadwal kosong!");
+  if (!anime) return ctx.reply("Maaf pada hari tersebut jadwal kosong!");
 
-  let animeResult = anime as IAnimeDatabase & { AnimeDetail: AnimeDetail };
-  if (!animeResult.AnimeDetail)
-    return ctx.answerCbQuery("Maaf detail belum tersedia 😥😥");
+  let detail = (await AnimeDetail.findOne({
+    where: { id: anime.anime_detail_id },
+  })) as IAnimeDetail | null;
 
-  const data = Input.fromBuffer(
-    (await downloadImage(animeResult.AnimeDetail.image!))!
-  );
+  if (!detail) return ctx.reply("Maaf detail belum tersedia 😥😥");
+
+  const data = Input.fromBuffer((await downloadImage(detail.image!))!);
   let inlineKeyboard = Markup.inlineKeyboard([
     [
       Markup.button.callback("◀", `PageAnimeGoing_prev`),
-      Markup.button.callback("🧡", `likeAnime_${animeResult.AnimeDetail.id}`),
-      Markup.button.callback("🕐", `setReminder_${animeResult.AnimeDetail.id}`),
+      Markup.button.callback("🧡", `likeAnime_${detail.id}`),
+      Markup.button.callback("🕐", `setReminder_${detail.id}`),
       Markup.button.callback("▶", `PageAnimeGoing_next`),
     ],
     [
-      Markup.button.url("Kunjungi 🔍", animeResult.AnimeDetail.link!),
-      Markup.button.callback(
-        "👁‍🗨 Sinopsis",
-        `getOnGoingSynopsis_${animeResult.AnimeDetail.id}`
-      ),
+      Markup.button.url("Kunjungi 🔍", detail.link!),
+      Markup.button.callback("👁‍🗨 Sinopsis", `getOnGoingSynopsis_${detail.id}`),
     ],
   ]);
 
   let caption = `╭─────[${currentDate()}]────✧
-┊ ■ Judul : ${animeResult.AnimeDetail.title}
-┊ ■ Japanese : ${animeResult.AnimeDetail.japanese}
-┊ ■ Episode : ${anime.eps} [${animeResult.AnimeDetail.status}]
-┊ ■ Skor : ${animeResult.AnimeDetail.score}
-┊ ■ Type : ${animeResult.AnimeDetail.type}
-┊ ■ Durasi : ${animeResult.AnimeDetail.duration}
-┊ ■ Genre : ${animeResult.AnimeDetail.genres}
+┊ ■ Judul : ${detail.title}
+┊ ■ Japanese : ${detail.japanese}
+┊ ■ Episode : ${anime.eps} [${detail.status}]
+┊ ■ Skor : ${detail.score}
+┊ ■ Type : ${detail.type}
+┊ ■ Durasi : ${detail.duration}
+┊ ■ Genre : ${detail.genres}
 ┊ ■ Anime Ke : ${page + 1}/${totalAnime}
 ╰────────────✧`;
 
