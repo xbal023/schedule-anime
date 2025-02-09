@@ -1,101 +1,67 @@
-import puppeteer from "puppeteer-extra";
-import steathPlugin from "puppeteer-extra-plugin-stealth";
-import type { LaunchOptions } from "puppeteer";
+import { chromium, Browser, Page } from "playwright";
+import type { BrowserContextOptions } from "playwright";
 import { IAnimeDetail, IAnimeList, IAnimeScheduleList } from "../types/otaku";
 
 export const onGoingInstance = async () => {
-  const launchOptions: LaunchOptions = {
-    headless: true,
+  const launchOptions: BrowserContextOptions = {
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36",
+    locale: "id-ID",
+    geolocation: { latitude: -6.2088, longitude: 106.8456 },
+    permissions: ["geolocation"],
+    timezoneId: "Asia/Jakarta",
+  };
+
+  const browser: Browser = await chromium.launch({
+    headless: false,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-blink-features=AutomationControlled",
     ],
-  };
-
-  puppeteer.use(steathPlugin());
-  const browser = await puppeteer.launch(launchOptions);
-  const page = await browser.newPage();
-
-  await page.emulateTimezone("Asia/Jakarta");
-
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, "language", { value: "id-ID" });
-    Object.defineProperty(navigator, "languages", {
-      value: ["id-ID", "en-US"],
-    });
   });
 
-  const context = browser.defaultBrowserContext();
-  await context.overridePermissions("https://otakudesu.cloud", ["geolocation"]);
-  await page.setGeolocation({ latitude: -6.2088, longitude: 106.8456 });
-  await page.setUserAgent(
-    "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
-  );
+  const context = await browser.newContext(launchOptions);
+  const page: Page = await context.newPage();
 
   async function getDetailAnime(keyId: string): Promise<IAnimeDetail> {
     let link = `https://otakudesu.cloud/anime/${keyId}`;
-    await page.goto(link, {
-      waitUntil: "domcontentloaded",
-    });
+    await page.goto(link, { waitUntil: "domcontentloaded" });
 
     console.log(`Scraping.... ${keyId}`);
-    const result = await page.evaluate((key) => {
-      const animeDetail: Partial<IAnimeDetail> = {};
-      const infoElements = document.querySelectorAll("div.infozin p");
-      infoElements.forEach((p: any) => {
-        const text = p.textContent.trim();
-        if (text.includes("Judul")) {
-          animeDetail.title = text.replace("Judul:", "").trim();
-        }
-        if (text.includes("Japanese")) {
-          animeDetail.japanese = text.replace("Japanese:", "").trim();
-        }
-        if (text.includes("Skor")) {
-          animeDetail.score = text.replace("Skor:", "").trim();
-        }
-        if (text.includes("Tipe")) {
-          animeDetail.type = text.replace("Tipe:", "").trim();
-        }
-        if (text.includes("Status")) {
-          animeDetail.status = text.replace("Status:", "").trim();
-        }
-        if (text.includes("Total Episode")) {
-          animeDetail.totalEpisodes = text.replace("Total Episode:", "").trim();
-        }
-        if (text.includes("Durasi")) {
-          animeDetail.duration = text.replace("Durasi:", "").trim();
-        }
-        if (text.includes("Tanggal Rilis")) {
-          animeDetail.releaseDate = text.replace("Tanggal Rilis:", "").trim();
-        }
-        if (text.includes("Studio")) {
-          animeDetail.studio = text.replace("Studio:", "").trim();
-        }
-        if (text.includes("Genre")) {
-          animeDetail.genres = Array.from(p.querySelectorAll("a"))
-            .map((a: any) => a.textContent.trim())
-            .join(",");
-        }
-      });
-      // Mengambil gambar
-      const imgElement = document.querySelector("div.fotoanime img");
-      animeDetail.image = imgElement ? imgElement.getAttribute("src")! : "";
 
-      animeDetail.link = `https://otakudesu.cloud/anime/${key}`;
-      // Mengambil sinopsis
-      const sinopsisElement = document.querySelector("div.sinopc p");
-      animeDetail.synopsis = sinopsisElement
-        ? sinopsisElement.textContent?.trim()
-        : "";
-      return animeDetail as IAnimeDetail;
-    }, keyId);
-    return result as IAnimeDetail;
+    const safeText = async (locator: string) =>
+      (await page.locator(locator).textContent())?.trim() || "";
+    const safeAttr = async (locator: string, attr: string) =>
+      (await page.locator(locator).getAttribute(attr)) || "";
+
+    const animeDetail: IAnimeDetail = {
+      id: 0,
+      key: keyId,
+      title: await safeText("div.infozin p:has-text('Judul')"),
+      japanese: await safeText("div.infozin p:has-text('Japanese')"),
+      score: await safeText("div.infozin p:has-text('Skor')"),
+      type: await safeText("div.infozin p:has-text('Tipe')"),
+      status: await safeText("div.infozin p:has-text('Status')"),
+      totalEpisodes: await safeText("div.infozin p:has-text('Total Episode')"),
+      duration: await safeText("div.infozin p:has-text('Durasi')"),
+      releaseDate: await safeText("div.infozin p:has-text('Tanggal Rilis')"),
+      studio: await safeText("div.infozin p:has-text('Studio')"),
+      genres: (
+        await page
+          .locator("div.infozin p:has-text('Genre') a")
+          .allTextContents()
+      ).join(","),
+      image: await safeAttr("div.fotoanime img", "src"),
+      link: link,
+      synopsis: await safeText("div.sinopc p"),
+    };
+
+    return animeDetail;
   }
 
   const getOngoingAnime = async () => {
     const allOngoingAnimeList: IAnimeList[] = [];
-
     let pageNumber = 1;
     let hasNextPage = true;
 
@@ -105,54 +71,55 @@ export const onGoingInstance = async () => {
           ? "https://otakudesu.cloud/ongoing-anime/"
           : `https://otakudesu.cloud/ongoing-anime/page/${pageNumber}`;
       console.log(`Scraping page: ${pageNumber}`);
+
       await page.goto(url, { waitUntil: "domcontentloaded" });
-      const ongoingAnimeList = await page.evaluate(() => {
-        const animeData: IAnimeList[] = [];
 
-        document
-          .querySelectorAll("#venkonten .venz ul li")
-          .forEach((item: Element, index) => {
-            const title =
-              (item.querySelector(".thumbz h2") as HTMLElement)?.innerText ||
-              "";
-            const img =
-              (item.querySelector(".thumbz img") as HTMLImageElement)?.src ||
-              "";
-            const link =
-              (item.querySelector(".thumb a") as HTMLAnchorElement)?.href || "";
-            const key = link.split("/anime/")[1].replace("/", "");
-            const eps = (
-              (item.querySelector(".epz") as HTMLElement)?.innerText.replace(
-                /[^\d]/g,
-                ""
-              ) || ""
-            )
+      const animeElements = await page
+        .locator("#venkonten .venz ul li")
+        .elementHandles();
+
+      for (const item of animeElements) {
+        const title = await item.$eval(
+          ".thumbz h2",
+          (el) => el.textContent?.trim() || ""
+        );
+        const img = await item.$eval(
+          ".thumbz img",
+          (el) => (el as HTMLImageElement).src || ""
+        );
+        const link = await item.$eval(
+          ".thumb a",
+          (el) => (el as HTMLAnchorElement).href || ""
+        );
+        const key = link.split("/anime/")[1].replace("/", "");
+        const eps = await item.$eval(
+          ".epz",
+          (el) =>
+            el.textContent
+              ?.replace(/[^\d]/g, "")
               .replace(/ +/g, "-")
-              .toLowerCase();
-            const releaseTag =
-              (item.querySelector(".epztipe") as HTMLElement)?.innerText.slice(
-                1
-              ) || "";
-            if (title && img && link && eps && releaseTag) {
-              animeData.push({
-                id: index,
-                title,
-                key,
-                link,
-                img,
-                eps,
-                releaseTag,
-              });
-            }
+              .toLowerCase() || ""
+        );
+        const releaseTag = await item.$eval(
+          ".epztipe",
+          (el) => el.textContent?.trim().slice(1) || ""
+        );
+
+        if (title && img && link && eps && releaseTag) {
+          allOngoingAnimeList.push({
+            id: allOngoingAnimeList.length,
+            title,
+            key,
+            link,
+            img,
+            eps,
+            releaseTag,
           });
+        }
+      }
 
-        return animeData;
-      });
-
-      allOngoingAnimeList.push(...ongoingAnimeList);
-      hasNextPage = await page.evaluate(() => {
-        return !!document.querySelector(".pagination .next.page-numbers");
-      });
+      hasNextPage =
+        (await page.locator(".pagination .next.page-numbers").count()) > 0;
       pageNumber++;
     }
     return allOngoingAnimeList;
@@ -163,48 +130,39 @@ export const onGoingInstance = async () => {
       waitUntil: "domcontentloaded",
     });
 
-    // Tunggu hingga selector untuk konten hari muncul
     await page.waitForSelector("#venkonten .kgjdwl321  .kglist321");
 
-    const data = await page.evaluate(() => {
-      const animeList: IAnimeScheduleList[] = [];
+    const animeList: IAnimeScheduleList[] = [];
+    let count = 0;
 
-      // Mengambil semua section berdasarkan selector
-      const daysSections = document.querySelectorAll(
-        "#venkonten .kgjdwl321 .kglist321"
+    const daysSections = await page
+      .locator("#venkonten .kgjdwl321 .kglist321")
+      .elementHandles();
+
+    for (const section of daysSections) {
+      const day = await section.$eval(
+        "h2",
+        (el) => el.textContent?.trim() || ""
       );
+      const animeItems = await section.$$("ul li a");
 
-      var count = 0;
-      daysSections.forEach((section, index) => {
-        const dayElement = section.querySelector("h2");
-        const animeItems = section.querySelectorAll(".kglist321 ul li a");
+      for (const item of animeItems) {
+        const title = await item.evaluate((el) => el.textContent?.trim() || "");
+        const link = await item.evaluate(
+          (el) => (el as HTMLAnchorElement).href || ""
+        );
+        const key = link.split("/anime/")[1].replace("/", "");
 
-        if (dayElement && animeItems.length > 0) {
-          const day = dayElement.innerText.trim();
-
-          animeItems.forEach((item, index) => {
-            // Asumsi item adalah HTMLAnchorElement
-            const anchorItem = item as HTMLAnchorElement;
-            const title = anchorItem?.innerText.trim();
-            const link = anchorItem.href;
-            const key = link.split("/anime/")[1].replace("/", "");
-
-            if (title && link) {
-              animeList.push({
-                id: count,
-                day,
-                title,
-                link,
-                key,
-              });
-              count++;
-            }
-          });
-        }
-      });
-      return animeList;
-    });
-    return data;
+        animeList.push({
+          id: count++,
+          day,
+          title,
+          link,
+          key,
+        });
+      }
+    }
+    return animeList;
   }
 
   return {
