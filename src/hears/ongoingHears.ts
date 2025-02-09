@@ -73,7 +73,7 @@ async function ongoing(ctx: MyContext) {
     ],
   ]);
 
-  let caption = `╭─────[${currentDate()}]────✧
+  let caption = `╭─────[${anime.releaseTag}]────✧
 ┊ ■ Judul : ${detail.title}
 ┊ ■ Japanese : ${detail.japanese}
 ┊ ■ Episode : ${anime.eps} [${detail.status}]
