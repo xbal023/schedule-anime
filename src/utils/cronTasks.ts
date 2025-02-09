@@ -35,7 +35,7 @@ async function taskList(bot: Telegraf<MyContext>) {
   async function runOngoingAnime() {
     console.log("Checking database!");
 
-    const ongoing: IAnimeList[] = await data.getOngoingAnime();
+    const ongoing: IAnimeList[] = (await data.getOngoingAnime()).reverse();
     const keys = ongoing.map((anime) => anime.key as string);
 
     const existingAnimes = await AnimeDetail.findAll({
