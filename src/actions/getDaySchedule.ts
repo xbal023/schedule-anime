@@ -22,7 +22,7 @@ composer.action(/getDaySchedule/g, async (ctx: MyContext) => {
 
   let page = (ctx.session as { page: number }).page;
 
-  const totalAnime = await AnimeSchedule.count({ where: { day: daySelect } });
+  const totalAnime = await AnimeDetail.count({ where: { status: "Ongoing" } });
   const totalPages = Math.ceil(totalAnime / pageSize);
   if (page < 0) page = 0;
   if (actionSelect === "next") page++;
@@ -34,17 +34,11 @@ composer.action(/getDaySchedule/g, async (ctx: MyContext) => {
   (ctx.session as { page: number }).page = page;
   if (!isAction) await ctx.deleteMessage();
   const offset = Math.max(page * pageSize, 0);
-  let anime = (await AnimeSchedule.findOne({
-    where: { day: daySelect },
-    offset,
-    limit: pageSize,
-  })) as IAnimeScheduleList | null;
-
-  if (!anime)
-    return ctx.answerCbQuery("Maaf pada hari tersebut jadwal kosong!");
 
   let detail = (await AnimeDetail.findOne({
-    where: { key: anime.key },
+    where: { releaseDate: daySelect },
+    offset,
+    limit: pageSize,
   })) as IAnimeDetail | null;
 
   if (!detail) return ctx.answerCbQuery("Maaf detail belum tersedia 😥😥");
@@ -58,7 +52,7 @@ composer.action(/getDaySchedule/g, async (ctx: MyContext) => {
       Markup.button.callback("▶", `getDaySchedule_${daySelect}:next`),
     ],
     [
-      Markup.button.url("Kunjungi 🔍", anime.link!),
+      Markup.button.url("Kunjungi 🔍", detail.link!),
       Markup.button.callback(
         "👁‍🗨 Sinopsis",
         `getSynopsis_${daySelect}:${detail.id}`
