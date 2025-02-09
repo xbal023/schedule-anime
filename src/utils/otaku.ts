@@ -31,7 +31,7 @@ export const onGoingInstance = async () => {
     console.log(`Scraping.... ${keyId}`);
 
     const safeText = async (locator: string) =>
-      (await page.locator(locator).textContent())?.trim() || "";
+      (await page.locator(locator).allTextContents()).join(" ").trim();
     const safeAttr = async (locator: string, attr: string) =>
       (await page.locator(locator).getAttribute(attr)) || "";
 
