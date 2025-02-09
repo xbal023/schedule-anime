@@ -1,20 +1,31 @@
 import puppeteer from "puppeteer";
 import type { LaunchOptions } from "puppeteer";
 import { IAnimeDetail, IAnimeList, IAnimeScheduleList } from "../types/otaku";
-import { CONFIG } from "../config";
 
 export const onGoingInstance = async () => {
   const launchOptions: LaunchOptions = {
     headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      `--proxy-server=${CONFIG.PROXY}`,
-    ],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   };
 
   const browser = await puppeteer.launch(launchOptions);
   const page = await browser.newPage();
+
+  await page.emulateTimezone("Asia/Jakarta");
+
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, "language", { value: "id-ID" });
+    Object.defineProperty(navigator, "languages", {
+      value: ["id-ID", "en-US"],
+    });
+  });
+
+  const context = browser.defaultBrowserContext();
+  await context.overridePermissions("https://otakudesu.cloud", ["geolocation"]);
+  await page.setGeolocation({ latitude: -6.2088, longitude: 106.8456 });
+  await page.setUserAgent(
+    "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36"
+  );
 
   async function getDetailAnime(keyId: string): Promise<IAnimeDetail> {
     let link = `https://otakudesu.cloud/anime/${keyId}`;
