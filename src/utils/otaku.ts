@@ -1,13 +1,19 @@
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-extra";
+import steathPlugin from "puppeteer-extra-plugin-stealth";
 import type { LaunchOptions } from "puppeteer";
 import { IAnimeDetail, IAnimeList, IAnimeScheduleList } from "../types/otaku";
 
 export const onGoingInstance = async () => {
   const launchOptions: LaunchOptions = {
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-blink-features=AutomationControlled",
+    ],
   };
 
+  puppeteer.use(steathPlugin());
   const browser = await puppeteer.launch(launchOptions);
   const page = await browser.newPage();
 
