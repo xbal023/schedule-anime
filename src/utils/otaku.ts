@@ -5,6 +5,7 @@ import { IAnimeDetail, IAnimeList, IAnimeScheduleList } from "../types/otaku";
 export const onGoingInstance = async () => {
   const launchOptions: LaunchOptions = {
     headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   };
 
   const browser = await puppeteer.launch(launchOptions);
