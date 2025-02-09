@@ -24,3 +24,5 @@ composer.command("bc", handlerOwner, async (ctx: Context) => {
   );
   await ctx.reply(`Terkirim ke ${jobs.length} orang`);
 });
+
+export default composer;

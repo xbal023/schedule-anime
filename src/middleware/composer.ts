@@ -1,6 +1,7 @@
 import { Composer } from "telegraf";
 import helpCommand from "../commands/help";
 import startCommand from "../commands/start";
+import adminCommand from "../commands/admin";
 
 import likeHears from "../hears/likeHears";
 import ongoingHears from "../hears/ongoingHears";
@@ -27,6 +28,7 @@ composers.use((ctx: MyContext, next: NextFunction) => {
 
 composers.use(helpCommand.middleware());
 composers.use(startCommand.middleware());
+composers.use(adminCommand.middleware());
 
 composers.use(likeHears.middleware());
 composers.use(ongoingHears.middleware());
