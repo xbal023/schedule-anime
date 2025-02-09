@@ -1,8 +1,7 @@
 import { Markup, Composer } from "telegraf";
 import type { Context } from "telegraf";
-import { AnimeDetail, User, UserSchedule } from "../utils/database";
+import { User } from "../utils/database";
 import { isCallbackQuery } from "../utils/message";
-import { Op } from "sequelize";
 
 const composer = new Composer();
 

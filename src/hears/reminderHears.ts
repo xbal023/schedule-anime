@@ -51,12 +51,3 @@ composer.hears("🕐 Ingatin", remindHears);
 composer.action("backReminderHears", remindHears);
 
 export default composer;
-
-function convertNumberToArray(n: number): string[][] {
-  const result: string[][] = [];
-  const arr = Array.from({ length: n }, (_, i) => `🕐 ${i + 1}`);
-  for (let i = 0; i < arr.length; i += 6) {
-    result.push(arr.slice(i, i + 6));
-  }
-  return result;
-}
