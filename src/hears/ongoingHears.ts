@@ -46,6 +46,7 @@ async function ongoing(ctx: MyContext) {
   let anime = (await AnimeDatabase.findOne({
     where: {},
     offset,
+    order: [["id", "DESC"]],
     limit: pageSize,
     include: [{ model: AnimeDetail }],
   })) as IAnimeDatabase | null;
