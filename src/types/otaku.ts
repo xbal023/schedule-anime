@@ -1,13 +1,6 @@
 import { Optional } from "sequelize";
 import { AnimeDetail } from "../utils/database";
 
-export interface IAnimeDatabase {
-  id: number;
-  eps: string;
-  releaseTag: string;
-  anime_detail_id: number;
-}
-
 export interface IAnimeList {
   id: number;
   title: string;
@@ -34,6 +27,7 @@ export interface IAnimeDetail {
   type: string;
   status: string;
   totalEpisodes: string;
+  episode: string;
   duration: string;
   releaseDate: string;
   link: string;
@@ -43,12 +37,6 @@ export interface IAnimeDetail {
   synopsis: string;
   key: string;
 }
-
-export interface IAnimeDatabaseCreation
-  extends Optional<IAnimeDatabase, "id"> {}
-
-export interface IAnimeScheduleListCreation
-  extends Optional<IAnimeScheduleList, "id"> {}
 
 export interface IAnimeDetailCreation extends Optional<IAnimeDetail, "id"> {}
 
