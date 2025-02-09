@@ -2,14 +2,7 @@ import { Markup, Composer, Input } from "telegraf";
 import { Op } from "sequelize";
 import { AnimeDetail, User, UserLike, UserSchedule } from "../utils/database";
 import { isCallbackQuery } from "../utils/message";
-import { currentDate } from "../utils/date";
 import { downloadImage } from "../utils/getBuffer";
-
-import type {
-  IUserLikeCreation,
-  IUserLikeList,
-  IUserScheduleList,
-} from "../types/user";
 import type { Includeable } from "sequelize";
 import type { MyContext } from "../types/telegraf";
 
