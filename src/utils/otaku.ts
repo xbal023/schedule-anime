@@ -1,11 +1,16 @@
 import puppeteer from "puppeteer";
 import type { LaunchOptions } from "puppeteer";
 import { IAnimeDetail, IAnimeList, IAnimeScheduleList } from "../types/otaku";
+import { CONFIG } from "../config";
 
 export const onGoingInstance = async () => {
   const launchOptions: LaunchOptions = {
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      `--proxy-server=${CONFIG.PROXY}`,
+    ],
   };
 
   const browser = await puppeteer.launch(launchOptions);
