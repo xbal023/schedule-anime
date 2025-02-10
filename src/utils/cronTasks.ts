@@ -27,7 +27,7 @@ async function taskList(bot: Telegraf<MyContext>) {
 
     const existingAnimes = await AnimeDetail.findAll({
       where: { key: keys },
-      attributes: ["id", "key"],
+      attributes: ["id", "key", "episode", "day"],
     });
 
     const existingAnimeMap = new Map<string, IAnimeDetail>(
@@ -54,21 +54,41 @@ async function taskList(bot: Telegraf<MyContext>) {
           )
         );
       }
+    }
+    const updates: { key: string; day?: string; episode?: string }[] = [];
 
-      for (let ongoing of ongoings) {
-        let animeDetail = existingAnimes.find(
-          (detail) => detail.key === ongoing.key
-        ) as AnimeDetail | null;
-        if (!animeDetail) continue;
-        if (animeDetail.day != ongoing.releaseTag) {
-          animeDetail.day = ongoing.releaseTag;
-          await animeDetail.save();
-        }
-        if (animeDetail.episode != ongoing.eps) {
-          animeDetail.episode = ongoing.eps;
-          await animeDetail.save();
-        }
+    ongoings.forEach((ongoing) => {
+      const animeDetail = existingAnimeMap.get(
+        ongoing.key
+      ) as AnimeDetail | null;
+      if (!animeDetail) return;
+      const updateData: { key: string; day?: string; episode?: string } = {
+        key: animeDetail.key,
+      };
+      let shouldUpdate = false;
+
+      if (animeDetail.day !== ongoing.releaseTag) {
+        updateData.day = ongoing.releaseTag;
+        shouldUpdate = true;
       }
+
+      if (animeDetail.episode !== ongoing.eps) {
+        updateData.episode = ongoing.eps;
+        shouldUpdate = true;
+      }
+
+      if (shouldUpdate) updates.push(updateData);
+    });
+
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map((data) =>
+          AnimeDetail.update(
+            { day: data.day, episode: data.episode },
+            { where: { key: data.key } }
+          )
+        )
+      );
     }
 
     const yesterday = new Date();
@@ -108,7 +128,8 @@ async function taskList(bot: Telegraf<MyContext>) {
 
   // Initial Database
   const countDetail = await AnimeDetail.count();
-  if (countDetail < 1) await runOngoingAnime();
+  // if (countDetail < 1)
+  await runOngoingAnime();
 }
 
 function filterUniqueValues<T extends unknown[]>(arr: T): T {

@@ -123,7 +123,7 @@ export const onGoingInstance = async () => {
         );
         const releaseTag = await item.$eval(
           ".epztipe",
-          (el) => el.textContent?.trim().slice(1) || ""
+          (el) => el.textContent?.trim().toLowerCase() || ""
         );
 
         if (title && img && link && eps && releaseTag) {
