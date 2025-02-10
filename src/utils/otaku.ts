@@ -38,34 +38,41 @@ export const onGoingInstance = async () => {
     const animeDetail: IAnimeDetail = {
       id: 0,
       key: keyId,
-      title: (await safeText("div.infozin p:has-text('Judul')")).split(": ")[1],
-      japanese: (await safeText("div.infozin p:has-text('Japanese')")).split(
-        ": "
-      )[1],
-      score: (await safeText("div.infozin p:has-text('Skor')")).split(": ")[1],
-      type: (await safeText("div.infozin p:has-text('Tipe')")).split(": ")[1],
-      status: (await safeText("div.infozin p:has-text('Status')")).split(
-        ": "
-      )[1],
+      title:
+        (await safeText("div.infozin p:has-text('Judul')")).split(": ")[1] ||
+        "",
+      japanese:
+        (await safeText("div.infozin p:has-text('Japanese')")).split(": ")[1] ||
+        "",
+      score:
+        (await safeText("div.infozin p:has-text('Skor')")).split(": ")[1] || "",
+      type:
+        (await safeText("div.infozin p:has-text('Tipe')")).split(": ")[1] || "",
+      status:
+        (await safeText("div.infozin p:has-text('Status')")).split(": ")[1] ||
+        "",
       episode: "unknown",
       day: "unknown",
-      totalEpisodes: (
-        await safeText("div.infozin p:has-text('Total Episode')")
-      ).split(": ")[1],
-      duration: (await safeText("div.infozin p:has-text('Durasi')")).split(
-        ": "
-      )[1],
-      releaseDate: (
-        await safeText("div.infozin p:has-text('Tanggal Rilis')")
-      ).split(": ")[1],
-      studio: (await safeText("div.infozin p:has-text('Studio')")).split(
-        ": "
-      )[1],
-      genres: (
-        await page
-          .locator("div.infozin p:has-text('Genre') a")
-          .allTextContents()
-      ).join(","),
+      totalEpisodes:
+        (await safeText("div.infozin p:has-text('Total Episode')")).split(
+          ": "
+        )[1] || "",
+      duration:
+        (await safeText("div.infozin p:has-text('Durasi')")).split(": ")[1] ||
+        "",
+      releaseDate:
+        (await safeText("div.infozin p:has-text('Tanggal Rilis')")).split(
+          ": "
+        )[1] || "",
+      studio:
+        (await safeText("div.infozin p:has-text('Studio')")).split(": ")[1] ||
+        "",
+      genres:
+        (
+          await page
+            .locator("div.infozin p:has-text('Genre') a")
+            .allTextContents()
+        ).join(",") || "",
       image: await safeAttr("div.fotoanime img", "src"),
       link: link,
       synopsis: await safeText("div.sinopc p"),
