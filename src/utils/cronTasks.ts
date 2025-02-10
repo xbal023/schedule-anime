@@ -89,36 +89,37 @@ async function taskList(bot: Telegraf<MyContext>) {
           )
         )
       );
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const updatedAnimes = (await UserSchedule.findAll({
+        include: [
+          {
+            model: AnimeDetail,
+            where: { updatedAt: { [Op.gte]: yesterday } } as WhereOptions,
+            order: [["updatedAt", "DESC"]],
+          },
+          {
+            model: User,
+            attributes: ["id", "sender"],
+          },
+        ],
+      })) as Optional<PUserSchedule, "id">[] | [];
+
+      for (let resultAnime of updatedAnimes) {
+        const data = Input.fromBuffer(
+          (await downloadImage(resultAnime.AnimeDetail.image!))!
+        );
+        bot.telegram.sendPhoto(resultAnime.User.sender, data, {
+          caption: `Haiii!, anime kamu ${resultAnime.AnimeDetail.title} sudah release episode baru lohh!\n\nCek yukk sekarang!`,
+          ...Markup.inlineKeyboard([
+            [Markup.button.url("Kunjungi 🔎", resultAnime.AnimeDetail.link)],
+          ]),
+        });
+      }
     }
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const updatedAnimes = (await UserSchedule.findAll({
-      include: [
-        {
-          model: AnimeDetail,
-          where: { updatedAt: { [Op.gte]: yesterday } } as WhereOptions,
-          order: [["updatedAt", "DESC"]],
-        },
-        {
-          model: User,
-          attributes: ["id", "sender"],
-        },
-      ],
-    })) as Optional<PUserSchedule, "id">[] | [];
-
-    for (let resultAnime of updatedAnimes) {
-      const data = Input.fromBuffer(
-        (await downloadImage(resultAnime.AnimeDetail.image!))!
-      );
-      bot.telegram.sendPhoto(resultAnime.User.sender, data, {
-        caption: `Haiii!, anime kamu ${resultAnime.AnimeDetail.title} sudah release episode baru lohh!\n\nCek yukk sekarang!`,
-        ...Markup.inlineKeyboard([
-          [Markup.button.url("Kunjungi 🔎", resultAnime.AnimeDetail.link)],
-        ]),
-      });
-    }
     console.log("Anime is up to date.");
     return true;
   }
