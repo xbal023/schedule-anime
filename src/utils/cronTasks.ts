@@ -60,11 +60,11 @@ async function taskList(bot: Telegraf<MyContext>) {
           (detail) => detail.key === ongoing.key
         ) as AnimeDetail | null;
         if (!animeDetail) continue;
-        if (animeDetail?.day !== ongoing.releaseTag) {
+        if (animeDetail.day != ongoing.releaseTag) {
           animeDetail.day = ongoing.releaseTag;
           await animeDetail.save();
         }
-        if (animeDetail?.episode !== ongoing.eps) {
+        if (animeDetail.episode != ongoing.eps) {
           animeDetail.episode = ongoing.eps;
           await animeDetail.save();
         }
