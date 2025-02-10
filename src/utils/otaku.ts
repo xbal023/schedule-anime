@@ -48,6 +48,7 @@ export const onGoingInstance = async () => {
         ": "
       )[1],
       episode: "unknown",
+      day: "unknown",
       totalEpisodes: (
         await safeText("div.infozin p:has-text('Total Episode')")
       ).split(": ")[1],

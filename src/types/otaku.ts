@@ -1,5 +1,5 @@
-import { Optional } from "sequelize";
-import { AnimeDetail } from "../utils/database";
+import type { Optional } from "sequelize";
+import type { AnimeDetail } from "../utils/database";
 
 export interface IAnimeList {
   id: number;
@@ -30,6 +30,7 @@ export interface IAnimeDetail {
   episode: string;
   duration: string;
   releaseDate: string;
+  day: string;
   link: string;
   studio: string;
   genres: string;
@@ -38,6 +39,24 @@ export interface IAnimeDetail {
   key: string;
 }
 
+export interface TAnimeDetail extends IAnimeDetail {
+  readonly updatedAt: Date;
+  readonly createdAt: Date;
+}
+
+export interface IUserParse {
+  id: number;
+  sender: string;
+}
+
+export interface IUserScheduleParse {
+  id: number;
+  User: IUserParse;
+}
+
+export interface PAnimeDetail extends IAnimeDetail {
+  UserSchedule: IUserScheduleParse;
+}
 export interface IAnimeDetailCreation extends Optional<IAnimeDetail, "id"> {}
 
 export interface IAnimeScheduleDetail {

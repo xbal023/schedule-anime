@@ -11,6 +11,8 @@ class AnimeDetail extends Model<IAnimeDetail, IAnimeDetailCreation>
   public type!: string;
   public status!: string;
   public totalEpisodes!: string;
+  public episode!: string;
+  public day!: string;
   public duration!: string;
   public releaseDate!: string;
   public studio!: string;
@@ -54,6 +56,16 @@ AnimeDetail.init(
     totalEpisodes: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    episode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "unknown",
+    },
+    day: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "unknown",
     },
     duration: {
       type: DataTypes.STRING,

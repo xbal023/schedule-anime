@@ -1,5 +1,5 @@
 import type { Optional } from "sequelize";
-import { IAnimeDetail } from "./otaku";
+import type { IAnimeDetail } from "./otaku";
 
 export interface IUser {
   id: number;
@@ -35,6 +35,12 @@ export interface IUserLikeList extends IUserLike {
 }
 
 export interface IUserScheduleList extends IUserSchedule {
+  User: IUser;
+  AnimeDetail: IAnimeDetail;
+}
+
+export interface PUserSchedule {
+  id: number;
   User: IUser;
   AnimeDetail: IAnimeDetail;
 }

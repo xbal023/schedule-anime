@@ -1,10 +1,10 @@
 import { Composer, Input, Markup } from "telegraf";
-import { AnimeDetail, AnimeSchedule } from "../utils/database";
+import { AnimeDetail } from "../utils/database";
 import { downloadImage } from "../utils/getBuffer";
 import { isCallbackQuery } from "../utils/message";
 
 import type { MyContext } from "../types/telegraf";
-import type { IAnimeDetail, IAnimeScheduleList } from "../types/otaku";
+import type { IAnimeDetail } from "../types/otaku";
 
 const composer = new Composer<MyContext>();
 const pageSize = 1;
@@ -36,7 +36,7 @@ composer.action(/getDaySchedule/g, async (ctx: MyContext) => {
   const offset = Math.max(page * pageSize, 0);
 
   let detail = (await AnimeDetail.findOne({
-    where: { releaseDate: daySelect },
+    where: { day: daySelect },
     offset,
     limit: pageSize,
   })) as IAnimeDetail | null;

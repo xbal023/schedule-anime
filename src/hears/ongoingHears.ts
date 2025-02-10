@@ -1,10 +1,9 @@
 import { Markup, Composer, Input } from "telegraf";
-import { AnimeDatabase, AnimeDetail } from "../utils/database";
+import { AnimeDetail } from "../utils/database";
 import { downloadImage } from "../utils/getBuffer";
-import { currentDate } from "../utils/date";
 import { isCallbackQuery, isTextMessage } from "../utils/message";
 
-import type { IAnimeDatabase, IAnimeDetail } from "../types/otaku";
+import type { IAnimeDetail } from "../types/otaku";
 import type { MyContext } from "../types/telegraf";
 
 const composer = new Composer<MyContext>();
@@ -30,7 +29,7 @@ async function ongoing(ctx: MyContext) {
 
   let page = (ctx.session as { page: number }).page;
 
-  const totalAnime = await AnimeDatabase.count({ where: {} });
+  const totalAnime = await AnimeDetail.count({ where: { status: "Ongoing" } });
   const totalPages = Math.ceil(totalAnime / pageSize);
   if (page < 0) page = 0;
   if (actionSelect === "next") page++;
@@ -43,18 +42,12 @@ async function ongoing(ctx: MyContext) {
   if (/Ongoing/g.test(textQuery) && !isAction)
     (ctx.session as { page: number }).page = 0;
   const offset = Math.max(page * pageSize, 0);
-  let anime = (await AnimeDatabase.findOne({
-    where: {},
-    offset,
-    order: [["id", "DESC"]],
-    limit: pageSize,
-    include: [{ model: AnimeDetail }],
-  })) as IAnimeDatabase | null;
-
-  if (!anime) return ctx.reply("Maaf pada hari tersebut jadwal kosong!");
 
   let detail = (await AnimeDetail.findOne({
-    where: { id: anime.anime_detail_id },
+    limit: pageSize,
+    offset,
+    where: { status: "Ongoing" },
+    order: [["updatedAt", "DESC"]],
   })) as IAnimeDetail | null;
 
   if (!detail) return ctx.reply("Maaf detail belum tersedia 😥😥");
@@ -73,10 +66,9 @@ async function ongoing(ctx: MyContext) {
     ],
   ]);
 
-  let caption = `╭─────[${anime.releaseTag}]────✧
-┊ ■ Judul : ${detail.title}
+  let caption = `╭──[${detail.title}]──✧
 ┊ ■ Japanese : ${detail.japanese}
-┊ ■ Episode : ${anime.eps} [${detail.status}]
+┊ ■ Episode : ${detail.episode} [${detail.status}]
 ┊ ■ Skor : ${detail.score}
 ┊ ■ Type : ${detail.type}
 ┊ ■ Durasi : ${detail.duration}

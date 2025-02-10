@@ -1,28 +1,7 @@
 import AnimeDetail from "./schema/AnimeDetail";
-import AnimeSchedule from "./schema/AnimeSchedule";
-import AnimeDatabase from "./schema/AnimeDatabase";
 import User from "./schema/User";
 import UserSchedule from "./schema/UserSchedule";
 import UserLike from "./schema/UserLike";
-
-AnimeDetail.hasMany(AnimeDatabase, {
-  foreignKey: "key",
-  onDelete: "CASCADE",
-});
-AnimeDatabase.belongsTo(AnimeDetail, {
-  foreignKey: "key",
-  onDelete: "CASCADE",
-});
-
-AnimeDetail.hasMany(AnimeSchedule, {
-  foreignKey: "key",
-  onDelete: "CASCADE",
-});
-
-AnimeSchedule.belongsTo(AnimeDetail, {
-  foreignKey: "key",
-  onDelete: "CASCADE",
-});
 
 AnimeDetail.hasMany(UserLike, {
   foreignKey: "anime_detail_id",
@@ -64,11 +43,4 @@ UserLike.belongsTo(User, {
   onDelete: "CASCADE",
 });
 
-export {
-  AnimeDatabase,
-  AnimeSchedule,
-  User,
-  UserLike,
-  UserSchedule,
-  AnimeDetail,
-};
+export { User, UserLike, UserSchedule, AnimeDetail };
